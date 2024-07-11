@@ -37,6 +37,7 @@ def initialize_gpio():
     GPIO.setup(BUTTONS, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
     for i in range(4):
         GPIO.add_event_detect(BUTTONS[i], GPIO.FALLING, verify_player_selection, 400 if use_sounds else 250)
+        
 
 
 def verify_player_selection(channel):
@@ -47,7 +48,12 @@ def verify_player_selection(channel):
         if channel == BUTTONS[pattern[current_step_of_level]]:
             current_step_of_level += 1
             if current_step_of_level >= current_level:
-                current_level += 1
+                if difficulty == "Hard":
+                    for i in range(3):
+                        current_level += i
+                    
+                else:
+                    current_level += 1
                 is_won_current_level = True
         else:
             is_game_over = True
@@ -64,26 +70,38 @@ def add_new_color_to_pattern():
     global is_won_current_level, current_step_of_level
     is_won_current_level = False
     current_step_of_level = 0
-    next_color = random.randint(0, 3)
-    pattern.append(next_color)
+    
+    if difficulty == "Hard":
+        for i in range(3):
+            next_color = random.randint(0,3)
+            pattern.append(next_color)
+    else:
+        next_color = random.randint(0,3)
+        pattern.append(next_color)
+
 
 
 def display_pattern_to_player():
     global is_displaying_pattern
     is_displaying_pattern = True
     GPIO.output(LIGHTS, GPIO.LOW)
+    if difficulty == "Hard":
+        speed = .14
+    else:
+        speed = .25
     for i in range(current_level):
         play_note(NOTES[pattern[i]])
         GPIO.output(LIGHTS[pattern[i]], GPIO.HIGH)
         time.sleep(speed)
         GPIO.output(LIGHTS[pattern[i]], GPIO.LOW)
         time.sleep(speed)
+    
     is_displaying_pattern = False
 
 
 def wait_for_player_to_repeat_pattern():
     while not is_won_current_level and not is_game_over:
-        time.sleep(0.1)
+        time.sleep(.1)
 
 
 def reset_board_for_new_game():
@@ -103,11 +121,17 @@ def start_game():
         add_new_color_to_pattern()
         display_pattern_to_player()
         wait_for_player_to_repeat_pattern()
+        global difficulty
         if is_game_over:
             print("Game Over! Your max score was {} colors!\n".format(current_level-1))
             play_again = input("Enter 'Y' to play again, or just press [ENTER] to exit.\n")
             if play_again == "Y" or play_again == "y":
                 reset_board_for_new_game()
+                choice = input("Do you want to play hard or easy?")
+                if choice == "Hard" or choice == "HARD" or choice == "hard":
+                    difficulty = "Hard"
+                else:
+                    difficulty = "Easy"
                 print("Begin new round!\n")
             else:
                 print("Thanks for playing!\n")
@@ -129,9 +153,16 @@ def main():
         # call(["sonic_pi", "use_synth :pulse"])
         # call(["sonic_pi", "use_bpm 100"])
         os.system('cls' if os.name == 'nt' else 'clear')
+        global difficulty
+        choice = input("Do you want to play hard or easy?")
+        if choice == "Hard" or choice == "HARD" or choice == "hard":
+            difficulty = "Hard"
+        else:
+            difficulty = "Easy"
         print("Begin new round!\n")
         initialize_gpio()
         start_game_monitor()
+        
     finally:
         GPIO.cleanup()
 

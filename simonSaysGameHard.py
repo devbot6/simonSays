@@ -12,7 +12,7 @@ BUTTONS = [11, 15, 13, 7]
 NOTES = ["E3", "A4", "E4", "Cs4"]
 
 # values you can change that affect game play
-speed = 0.25
+speed = 0.09
 use_sounds = False #true
 
 # flags used to signal game status
@@ -47,7 +47,7 @@ def verify_player_selection(channel):
         if channel == BUTTONS[pattern[current_step_of_level]]:
             current_step_of_level += 1
             if current_step_of_level >= current_level:
-                current_level += 1
+                current_level += 2
                 is_won_current_level = True
         else:
             is_game_over = True
@@ -65,8 +65,9 @@ def add_new_color_to_pattern():
     is_won_current_level = False
     current_step_of_level = 0
     next_color = random.randint(0, 3)
+    next_color2 = random.randint(0, 3)
     pattern.append(next_color)
-
+    pattern.append(next_color2)
 
 def display_pattern_to_player():
     global is_displaying_pattern
